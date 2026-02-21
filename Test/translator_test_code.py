@@ -1,13 +1,5 @@
-from groq import Groq
-import os
-import sys
 import textwrap
 from deep_translator import GoogleTranslator
-
-
-# TRANSLATOR
-
-
 
 def translate_massive_text(raw_text, target_language='en', chunk_limit=4000):
     """
@@ -41,53 +33,19 @@ def translate_massive_text(raw_text, target_language='en', chunk_limit=4000):
             
     return translated_full_text.strip()
 
-
-# User input
-
-# 1. file upload
-user_input = input("Do you want to upload file?: ")
-if user_input == "1":
-    yes = True
-else:
-    yes = False
-
-if (yes):
-    print("\nChose upload option!")
-    file_name = input("Enter file name: ")
-    with open(file_name, encoding='utf-8') as file_1:
-        data = file_1.read()
-else:
-    data = input("\nEnter the text you want to summarize: ")
+# ==========================================
+# EXECUTION TEST
+# ==========================================
+if __name__ == "__main__":
+    # Simulating a massive Spanish text input
+    # In your actual script, this would be your `data = file_1.read()` variable
     
-# 2. Convert output to english?
-user_input = input("Do you want to convert output to english?: ")
-
-if user_input == "1":
-    print("taking eng route")
-    data = translate_massive_text(data)
+    with open("temp.txt", encoding='utf-8') as file_1:
+        massive_spanish_text = str(file_1.readlines())
+        
+    english_result = translate_massive_text(massive_spanish_text)
     
-content = """
-            You are an expert content synthesizer.
-            You are to summazie text.
-            Focus on factual accuracy and eliminate fluff.
-            Style: Use concise paragraphs if required But be more structured, may use ASCII art to structure too.
-            Do NOT be redundant.
-            """
-
-client = Groq(api_key= os.getenv("GROQ_API_KEY")) 
-
-completion = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
-    messages=[
-                {
-            "role": "system",
-            "content": content
-        },
-        {
-            "role": "user",
-            "content": data
-        }
-    ]
-)
-
-print(completion.choices[0].message.content)
+    print("\n--- TRANSLATION COMPLETE ---")
+    # Print the first 500 characters to verify success
+    print(english_result)
+    
