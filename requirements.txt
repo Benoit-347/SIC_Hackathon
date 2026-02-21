@@ -1,6 +1,5 @@
 groq
-textwrap
-deep_translator
+deep-translator
 rapidocr_pdf
-collections
+collection
 streamlit
