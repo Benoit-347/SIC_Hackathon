@@ -393,6 +393,7 @@ def summarize_in_chunks_ui(raw_text, client):
     system_prompt = """
     You are an expert content synthesizer. Summarize the provided text.
     Focus on factual accuracy and eliminate fluff.
+    Be technical and precise
     Style: Use concise paragraphs. Use ASCII art or bullet points to structure.
     Do NOT be redundant.
     """
@@ -534,7 +535,7 @@ def main():
             
             # Phase 2: Initialize Chat Memory automatically upon new summary
             st.session_state.chat_manager = FastContextManager(max_words=10000)
-            system_instruction = f"You are an expert analytical assistant. Base all your answers strictly on this document summary:\n{summary_output}"
+            system_instruction = f"You are an expert analytical assistant. Be technical and precise. Base all your answers strictly on this document summary:\n{summary_output}"
             st.session_state.chat_manager.add_message("system", system_instruction)
             st.session_state.chat_messages = []
             st.rerun()
