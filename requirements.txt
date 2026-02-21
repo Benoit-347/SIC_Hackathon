@@ -1,3 +1,5 @@
 groq
 textwrap
 deep_translator
+rapidocr_pdf
+collections

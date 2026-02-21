@@ -1,12 +1,11 @@
 from groq import Groq
 import os
-import sys
 import textwrap
 from deep_translator import GoogleTranslator
-
+from rapidocr_pdf import RapidOCRPDF
+import time, sys
 
 # TRANSLATOR
-
 
 
 def translate_massive_text(raw_text, target_language='en', chunk_limit=4000):
@@ -22,7 +21,8 @@ def translate_massive_text(raw_text, target_language='en', chunk_limit=4000):
     # replace_whitespace=False ensures we keep the original paragraphs and line breaks
     text_chunks = textwrap.wrap(raw_text, width=chunk_limit, replace_whitespace=False)
     
-    print(f"[SYSTEM] Text partitioned into {len(text_chunks)} chunks for processing.")
+    print(f"[SYSTEM] Text partitioned into {len(text_chunks)} chunks for processing.\nStarting Translation!\n")
+    translation_start_time = time.time()
     
     translated_full_text = ""
     
@@ -39,33 +39,50 @@ def translate_massive_text(raw_text, target_language='en', chunk_limit=4000):
             # If a chunk fails, we append a warning but keep the program running
             translated_full_text += f"\n[TRANSLATION ERROR IN THIS SECTION]\n"
             
+    translation_end_time = time.time()
+    print(f"Translation took {translation_end_time - translation_start_time} seconds")
     return translated_full_text.strip()
+
 
 
 # User input
 
 # 1. file upload
-user_input = input("Do you want to upload file?: ")
-if user_input == "1":
-    yes = True
-else:
-    yes = False
+user_input = input("Do you want to upload pdf/txt/paste text?: (2/1/0) ")
 
-if (yes):
-    print("\nChose upload option!")
-    file_name = input("Enter file name: ")
-    with open(file_name, encoding='utf-8') as file_1:
-        data = file_1.read()
-else:
-    data = input("\nEnter the text you want to summarize: ")
+if user_input == '2':
+    pdf_read_start_time = time.time()
+    pdf_extracter = RapidOCRPDF()
+    pdf_path = input("Enter pdf path: ")         #"SIC_Chapter_7.pdf"
+    text_per_pages = pdf_extracter(pdf_path)
+    num_pages = len(text_per_pages)
+    print(num_pages)
+    if num_pages < 100:
+        print(f"The number of pages in pdf is :{num_pages} \nThis is near limit to send to groq, which is 12k tokens/ 100 pages of pdf!\nConsidering only first 100 pages!")
+        text_per_pages = text_per_pages[:50]
+    data = "\n".join([str(t) for t in text_per_pages])
+    pdf_read_end_time = time.time()
     
-# 2. Convert output to english?
-user_input = input("Do you want to convert output to english?: ")
+elif user_input == '1':
+        file_name = input("Enter file name: ")
+        with open(file_name, encoding='utf-8') as file_1:
+            data = file_1.read()
+elif user_input == '0':
+    data = input("\nEnter the text you want to summarize: ")
+else:
+    print("Invalid input!")
+    
+print(f"Pdf conversion tool: {pdf_read_end_time - pdf_read_start_time} seconds")
 
-if user_input == "1":
+# 2. Convert output to english?
+eng_user_input = input("\nDo you want to convert output to english?: ")
+
+if eng_user_input == "1":
     print("taking eng route")
     data = translate_massive_text(data)
-    
+    print("\nCompleted Translation!")
+
+print("\nStarting AI text summarization!\nSending API request to GROQ!\n")
 content = """
             You are an expert content synthesizer.
             You are to summazie text.
@@ -74,6 +91,7 @@ content = """
             Do NOT be redundant.
             """
 
+api_request_start_time = time.time()
 client = Groq(api_key= os.getenv("GROQ_API_KEY")) 
 
 completion = client.chat.completions.create(
@@ -90,4 +108,12 @@ completion = client.chat.completions.create(
     ]
 )
 
-print(completion.choices[0].message.content)
+output = completion.choices[0].message.content
+print(output)
+
+
+api_request_end_time = time.time()
+print(f"groq api request took: {api_request_end_time - api_request_start_time} seconds")
+
+# Extra analytics:
+print(f"\nAnalytics: \nNo. of words in input: {len(data)} \t\tNo. of words at summary: {len(output)}")
