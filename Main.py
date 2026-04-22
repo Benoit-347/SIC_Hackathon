@@ -5,6 +5,8 @@ from rapidocr_pdf import RapidOCRPDF
 from groq import Groq
 import os, sys, time
 
+# added comment 
+
 def read_pdf_to_text(pdf_path):
     
     # initialze PDF- OCR + extractor    object.     (pdf contains selectable (word embedd) or images)
